@@ -31,9 +31,10 @@ jobs:
           tomll --help
           tomljson --help
 
-      - name: Build
+      - name: Build and pack
         run: |
-          GOOS=linux go build -o ./bin/gotom ./
+          GOOS=linux go build -o ./bin/gotom ./ && \
+          chmod +x ./bin/gotom
           tar -czvf gotom-dist.tar.gz --exclude=.git --exclude=**/*.go ./bin
 
       - name: Upload buildpacks
@@ -53,6 +54,16 @@ jobs:
         uses: actions/download-artifact@v2
         with:
           name: gotom-dist
+      - name: Unpack
+        run: |
+          tar -xzvf gotom-dist.tar.gz -C .
+      - name: After unpack artifacts
+        id: after-unpack
+        env:
+          ECR_REGISTRY: ghcr.io/laraboot-io
+        run: |
+          echo "Done"
+          ./bin/gotom version
       - name: Release
         id: release
         if: ${{ github.event_name == 'release' }}
@@ -60,9 +71,3 @@ jobs:
           ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
         run: |
           echo "Releasing"
-      - name: After download artifacts
-        id: all-together
-        env:
-          ECR_REGISTRY: ghcr.io/laraboot-io
-        run: |
-          echo "Done"

@@ -68,7 +68,8 @@ jobs:
           ECR_REGISTRY: ghcr.io/laraboot-io
         run: |
           echo "Done"
-          ./bin/gotom version
+          chmod +x ./dist/gotom_linux_386/gotom
+          ./dist/gotom_linux_386/gotom version
       - name: Run GoReleaser
         uses: goreleaser/goreleaser-action@master
         with:

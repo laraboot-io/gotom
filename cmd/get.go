@@ -58,8 +58,8 @@ var getCmd = &cobra.Command{
 
 		config, _ := toml.Load(string(content))
 
-		fmt.Printf("Content: %s\n", string(content))
-		fmt.Printf("Getting: %s\n", args[0])
+		//fmt.Printf("Content: %s\n", string(content))
+		//fmt.Printf("Getting: %s\n", args[0])
 
 		// From: https://github.com/pelletier/go-toml#usage-example
 		//		config, _ := toml.Load(`

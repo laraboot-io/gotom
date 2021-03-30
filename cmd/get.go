@@ -32,14 +32,14 @@ var getCmd = &cobra.Command{
 	Long:  `Use this command to extract a value from a TOML document.`,
 	Run: func(cmd *cobra.Command, args []string) {
 
-		path, err := os.Getwd()
+		//path, err := os.Getwd()
+		//
+		//if err != nil {
+		//	log.Println(err)
+		//	panic(err)
+		//}
 
-		if err != nil {
-			log.Println(err)
-			panic(err)
-		}
-
-		file_name := fmt.Sprintf("%s/%s", path, args[1])
+		file_name := fmt.Sprintf("%s", args[1])
 
 		file, err := os.Open(file_name)
 

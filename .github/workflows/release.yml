@@ -1,0 +1,66 @@
+name: Build and Release
+
+on:
+  push:
+    branches:
+      - main
+      - dev
+  release:
+    types: [ published ]
+
+jobs:
+  integration:
+    name: Build Tests
+    runs-on: ubuntu-latest
+    steps:
+      - name: Setup Go
+        uses: actions/setup-go@v1
+        with:
+          go-version: 1.16.x
+      - uses: actions/setup-node@v2
+        with:
+          node-version: '12.x'
+          registry-url: 'https://npm.pkg.github.com'
+      - name: Toml helpers
+        run: |
+          export PATH=$PATH:$(go env GOPATH)/bin
+          go install github.com/pelletier/go-toml/cmd/tomll@latest
+          go install github.com/pelletier/go-toml/cmd/tomljson@latest
+          tomll --help
+          tomljson --help
+
+      - name: Build
+        run: |
+          GOOS=linux go build -o ./bin/gotom ./
+          tar -czvf gotom-dist.tar.gz --exclude=.git --exclude=**/*.go ./bin
+
+      - name: Upload buildpacks
+        uses: actions/upload-artifact@v2
+        with:
+          name: gotom-dist
+          path: gotom-dist.tar.gz
+
+  release:
+    name: Release
+    runs-on: ubuntu-latest
+    needs: integration
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+      - name: Download buildpacks
+        uses: actions/download-artifact@v2
+        with:
+          name: gotom-dist
+      - name: Release
+        id: release
+        if: ${{ github.event_name == 'release' }}
+        env:
+          ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
+        run: |
+          echo "Releasing"
+      - name: After download artifacts
+        id: all-together
+        env:
+          ECR_REGISTRY: ghcr.io/laraboot-io
+        run: |
+          echo "Done"

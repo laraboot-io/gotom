@@ -31,10 +31,16 @@ jobs:
           tomll --help
           tomljson --help
 
-      - name: Build and pack
+      - name: Run GoReleaser (build mode)
+        uses: goreleaser/goreleaser-action@master
+        with:
+          version: latest
+          args: build
+
+      - name: Pack
         run: |
-          GOOS=linux go build -o ./bin/gotom ./ && \
-          chmod +x ./bin/gotom
+          ls -ltah ./
+          ls -ltah ./bin
           tar -czvf gotom-dist.tar.gz --exclude=.git --exclude=**/*.go ./bin
 
       - name: Upload buildpacks

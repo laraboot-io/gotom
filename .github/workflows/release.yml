@@ -39,9 +39,8 @@ jobs:
 
       - name: Pack
         run: |
-          ls -ltah ./
-          ls -ltah ./bin
-          tar -czvf gotom-dist.tar.gz --exclude=.git --exclude=**/*.go ./bin
+          ls -ltah ./dist
+          tar -czvf gotom-dist.tar.gz --exclude=.git --exclude=**/*.go ./dist
 
       - name: Upload buildpacks
         uses: actions/upload-artifact@v2

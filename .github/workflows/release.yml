@@ -7,8 +7,6 @@ on:
       - dev
     tags:
       - '*'
-  release:
-    types: [ published ]
 
 jobs:
   integration:

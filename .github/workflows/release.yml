@@ -1,0 +1,85 @@
+name: Build and Release
+
+on:
+  push:
+    branches:
+      - main
+      - dev
+jobs:
+  integration:
+    name: Build Tests
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+      - name: Setup Go
+        uses: actions/setup-go@v1
+        with:
+          go-version: 1.16.x
+      - uses: actions/setup-node@v2
+        with:
+          node-version: '12.x'
+          registry-url: 'https://npm.pkg.github.com'
+      - name: Toml helpers
+        run: |
+          export PATH=$PATH:$(go env GOPATH)/bin
+          go install github.com/pelletier/go-toml/cmd/tomll@latest
+          go install github.com/pelletier/go-toml/cmd/tomljson@latest
+          tomll --help
+          tomljson --help
+
+      - name: Run GoReleaser (build mode)
+        uses: goreleaser/goreleaser-action@master
+        with:
+          version: latest
+          args: build --snapshot
+
+      - name: Pack
+        run: |
+          ls -ltah ./dist
+          tar -czvf gotom-dist.tar.gz --exclude=.git --exclude=**/*.go ./dist
+
+      - name: Upload buildpacks
+        uses: actions/upload-artifact@v2
+        with:
+          name: gotom-dist
+          path: gotom-dist.tar.gz
+
+  release:
+    name: Release
+    runs-on: ubuntu-latest
+    needs: integration
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+      - name: Download buildpacks
+        uses: actions/download-artifact@v2
+        with:
+          name: gotom-dist
+      - name: Unpack
+        run: |
+          tar -xzvf gotom-dist.tar.gz -C .
+      - name: After unpack artifacts
+        id: after-unpack
+        env:
+          ECR_REGISTRY: ghcr.io/laraboot-io
+        run: |
+          echo "Done"
+          chmod +x ./dist/gotom_linux_386/gotom
+          ./dist/gotom_linux_386/gotom version
+      - name: Run GoReleaser
+        uses: goreleaser/goreleaser-action@master
+        with:
+          version: latest
+          args: release --snapshot --rm-dist
+        env:
+          GITHUB_TOKEN: ${{ secrets.GO_RELEASER_GITHUB_TOKEN }}
+
+      - uses: marvinpinto/action-automatic-releases@latest
+        with:
+          repo_token: "${{ secrets.GO_RELEASER_GITHUB_TOKEN }}"
+          automatic_release_tag: "latest"
+          prerelease: true
+          title: "Development Build"
+          files: |
+            ./dist
